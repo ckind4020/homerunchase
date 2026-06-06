@@ -78,8 +78,13 @@ button{font-family:var(--head);cursor:pointer;border:none;background:none;color:
 .sb-prog>i{display:block;height:100%;background:var(--gold);transition:width .35s}
 
 /* ---------- GAME BODY ---------- */
-.game-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:18px}
-@media(max-width:840px){.game-grid{grid-template-columns:1fr} .scoreboard{grid-template-columns:1fr;gap:12px} .sb-mid{border:none;border-top:1px solid rgba(255,255,255,.12);border-bottom:1px solid rgba(255,255,255,.12);padding:10px 0}}
+.game-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:18px;grid-template-areas:"spin pool" "lineup pool";align-items:start}
+.area-spin{grid-area:spin}.area-pool{grid-area:pool}.area-lineup{grid-area:lineup}
+@media(max-width:840px){
+  .game-grid{grid-template-columns:1fr;grid-template-areas:"spin" "pool" "lineup"}
+  .scoreboard{grid-template-columns:1fr;gap:12px}
+  .sb-mid{border:none;border-top:1px solid rgba(255,255,255,.12);border-bottom:1px solid rgba(255,255,255,.12);padding:10px 0}
+}
 .panel{background:var(--paper);border:1.5px solid var(--line2);border-radius:14px;overflow:hidden;display:flex;flex-direction:column}
 .panel-h{font-family:var(--head);text-transform:uppercase;letter-spacing:1.5px;font-size:13px;font-weight:600;color:var(--ink);padding:12px 16px;border-bottom:1.5px solid var(--line);display:flex;align-items:center;justify-content:space-between;background:rgba(22,34,61,.03)}
 
@@ -98,12 +103,12 @@ button{font-family:var(--head);cursor:pointer;border:none;background:none;color:
 .reroll .x{font-family:var(--body);opacity:.85;font-size:12px}
 
 /* pool list */
-.pool-tools{display:flex;gap:8px;padding:10px 12px;border-bottom:1px solid var(--line);align-items:center}
-.pool-tools input{flex:1;font-family:var(--body);font-size:14px;padding:8px 10px;border:1.5px solid var(--line2);border-radius:8px;background:#fff;color:var(--ink)}
+.pool-tools{display:flex;gap:8px;padding:10px 12px;border-bottom:1px solid var(--line);align-items:center;flex-wrap:wrap}
+.pool-tools input{flex:1 1 160px;font-family:var(--body);font-size:14px;padding:8px 10px;border:1.5px solid var(--line2);border-radius:8px;background:#fff;color:var(--ink)}
 .pool-tools input:focus{outline:none;border-color:var(--red)}
-.pool-tools .hint{font-family:var(--head);font-size:10px;letter-spacing:.5px;text-transform:uppercase;color:var(--ink2);white-space:nowrap}
+.pool-tools .hint{font-family:var(--head);font-size:10px;letter-spacing:.5px;text-transform:uppercase;color:var(--ink2)}
 .pool-list{overflow-y:auto;max-height:430px}
-.phead,.prow{display:grid;grid-template-columns:26px minmax(80px,2.2fr) repeat(6,1fr);align-items:center;gap:4px;padding:8px 12px;border-bottom:1px solid var(--line)}
+.phead,.prow{display:grid;grid-template-columns:26px minmax(96px,2.6fr) repeat(5,1fr);align-items:center;gap:5px;padding:8px 12px;border-bottom:1px solid var(--line)}
 .phead{position:sticky;top:0;background:var(--paper);font-family:var(--head);font-size:10.5px;letter-spacing:.3px;text-transform:uppercase;color:var(--ink2);z-index:2}
 .phead .st{cursor:pointer;text-align:right;padding:2px 0}
 .phead .st.on{color:var(--red)}
@@ -112,7 +117,7 @@ button{font-family:var(--head);cursor:pointer;border:none;background:none;color:
 .prow:hover{background:rgba(176,39,29,.07)}
 .prow.used{opacity:.32;pointer-events:none}
 .prow .pos{font-family:var(--head);font-size:9.5px;font-weight:600;background:var(--ink);color:#fff;border-radius:5px;padding:2px 0;text-align:center}
-.prow .nm{font-family:var(--body);font-weight:500;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.prow .nm{font-family:var(--body);font-weight:500;font-size:14px;line-height:1.15;overflow-wrap:break-word}
 .prow .st{font-family:var(--head);font-size:13px;color:var(--ink);text-align:right;font-variant-numeric:tabular-nums}
 .choice{display:flex;gap:6px;padding:8px 14px;background:rgba(22,34,61,.05);border-bottom:1px solid var(--line)}
 .choice button{flex:1;font-family:var(--head);font-size:12px;letter-spacing:1px;text-transform:uppercase;padding:9px;border-radius:7px;color:#fff}
@@ -210,27 +215,26 @@ button{font-family:var(--head);cursor:pointer;border:none;background:none;color:
     </div>
 
     <div class="game-grid">
-      <div style="display:flex;flex-direction:column;gap:18px">
-        <div class="panel">
-          <div class="panel-h">The Spin <span id="spinRound" style="color:var(--ink2)"></span></div>
-          <div class="spin-area">
-            <div class="spin-row" id="spinRow"></div>
-            <button class="reroll" id="rerollBtn" onclick="reroll()"><span>↻ Re-roll</span> <span class="x" id="rollText"></span></button>
-          </div>
-        </div>
-        <div class="panel" style="flex:1">
-          <div class="panel-h">Your Lineup</div>
-          <div class="lineup" id="lineup"></div>
+      <div class="panel area-spin">
+        <div class="panel-h">The Spin <span id="spinRound" style="color:var(--ink2)"></span></div>
+        <div class="spin-area">
+          <div class="spin-row" id="spinRow"></div>
+          <button class="reroll" id="rerollBtn" onclick="reroll()"><span>↻ Re-roll</span> <span class="x" id="rollText"></span></button>
         </div>
       </div>
 
-      <div class="panel">
+      <div class="panel area-pool">
         <div class="panel-h"><span id="poolTitle">Available</span> <span id="poolCount" style="color:var(--ink2)"></span></div>
         <div class="pool-tools">
           <input id="search" placeholder="Search batter…" oninput="renderPool()">
-          <span class="hint">Tap a column to sort · HR is hidden</span>
+          <span class="hint">Tap a column to sort · HR hidden</span>
         </div>
         <div class="pool-list" id="pool"></div>
+      </div>
+
+      <div class="panel area-lineup">
+        <div class="panel-h">Your Lineup</div>
+        <div class="lineup" id="lineup"></div>
       </div>
     </div>
   </section>
@@ -250,7 +254,7 @@ const TARGET = 762;
 // ▼▼▼  SET YOUR DOMAIN HERE once it's live (no https://) — used in the share image + tweet  ▼▼▼
 const SITE_URL = "homerunchase.com";
 // card: A=[id,pos,hr,szn,avg,r,rbi,h,sb]  B=[id,hr,szn,avg,r,rbi,h,sb]  (hr=best season; rest=decade totals)
-const SCOLS = [['szn','SZN'],['avg','AVG'],['r','R'],['rbi','RBI'],['h','H'],['sb','SB']];
+const SCOLS = [['szn','SZN'],['avg','AVG'],['r','R'],['rbi','RBI'],['h','H']];
 function fmtAvg(v){ return (v>=1000?'1.000':'.'+String(v).padStart(3,'0')); }
 let S = null;
 
