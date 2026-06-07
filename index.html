@@ -170,6 +170,23 @@ button{font-family:var(--head);cursor:pointer;border:none;background:none;color:
 .foot{text-align:center;font-family:var(--body);font-size:12px;color:var(--ink2);margin-top:34px;line-height:1.5}
 .toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(80px);background:var(--ink);color:var(--cream);font-family:var(--head);letter-spacing:1px;font-size:13px;padding:12px 20px;border-radius:10px;opacity:0;transition:.3s;z-index:50;text-transform:uppercase}
 .toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+.title-lb{margin-top:22px;font-family:var(--head);font-size:13px;letter-spacing:1.5px;text-transform:uppercase;border:1.5px solid var(--line2);color:var(--ink2);padding:11px 22px;border-radius:9px;transition:.12s}
+.title-lb:hover{border-color:var(--red);color:var(--red)}
+#leaderboard{max-width:560px;margin:0 auto}
+.lb-tabs{display:flex;gap:8px;justify-content:center;margin-top:4px}
+.lb-tab{flex:1;font-family:var(--head);font-size:12px;letter-spacing:1px;text-transform:uppercase;padding:11px;border:1.5px solid var(--line2);border-radius:9px;color:var(--ink2);transition:.12s}
+.lb-tab:hover{border-color:var(--red);color:var(--red)}
+.lb-tab.on{background:var(--ink);color:var(--cream);border-color:var(--ink)}
+.lb-card{max-width:560px;margin:24px auto 0}
+.lb-form{padding:16px 18px}
+.lb-prompt{font-family:var(--body);color:var(--ink2);font-size:15px;margin-bottom:12px;line-height:1.5}
+.lb-row{display:flex;gap:10px}
+.lb-row input{flex:1;font-family:var(--body);font-size:15px;padding:11px 13px;border:1.5px solid var(--line2);border-radius:9px;background:#fff;color:var(--ink)}
+.lb-row input:focus{outline:none;border-color:var(--red)}
+.lb-row button{font-family:var(--head);font-size:13px;letter-spacing:1px;text-transform:uppercase;background:var(--ink);color:var(--cream);padding:0 20px;border-radius:9px;transition:.12s}
+.lb-row button:hover{background:var(--red)} .lb-row button:disabled{opacity:.5}
+.lb-loading{padding:26px 16px;text-align:center;font-family:var(--body);color:var(--ink2);font-size:14px}
+#lbBoard,#lbViewBoard{max-height:460px;overflow-y:auto}
 </style>
 </head>
 <body>
@@ -202,6 +219,19 @@ button{font-family:var(--head);cursor:pointer;border:none;background:none;color:
       </div>
     </div>
     <p class="rules">21 picks: two at each of the 9 positions (C, 1B, 2B, 3B, SS, LF, CF, RF, DH) plus 3 wildcards — matching the 21 seasons Bonds played to set the record. Each batter shows their full totals for that era — seasons played (SZN), average, runs, RBI, hits and steals — with home runs hidden until you draft. You're scored on each player's single best HR season of the era. Eras run from 1920, the Babe Ruth live-ball era, to today.</p>
+    <button id="titleLbBtn" class="title-lb hidden" onclick="showLeaderboard()">🏆 View Global Leaderboard</button>
+  </section>
+
+  <!-- LEADERBOARD -->
+  <section id="leaderboard" class="hidden">
+    <div class="topbar"><div class="brand"><span class="dot">HR</span> Global Leaderboard</div>
+      <button class="btn-ghost" onclick="quitToTitle()">Back</button></div>
+    <div id="lbTabs" class="lb-tabs">
+      <button class="lb-tab" data-m="A" onclick="showLeaderboard('A')">Franchise</button>
+      <button class="lb-tab on" data-m="B" onclick="showLeaderboard('B')">Open Draft</button>
+      <button class="lb-tab" data-m="C" onclick="showLeaderboard('C')">All-Time</button>
+    </div>
+    <div class="board" style="margin-top:14px"><div class="board-h">Top 100 · Most Home Runs</div><div id="lbViewBoard"></div></div>
   </section>
 
   <!-- GAME -->
@@ -260,6 +290,11 @@ const LEADERS = GAMEDATA.leaders;      // [[name,hr],...] desc
 const TARGET = 762;
 // ▼▼▼  SET YOUR DOMAIN HERE once it's live (no https://) — used in the share image + tweet  ▼▼▼
 const SITE_URL = "homerunchase.com";
+// ▼▼▼  PASTE YOUR SUPABASE VALUES HERE (Project Settings → API) — the anon key is safe to ship publicly  ▼▼▼
+const SUPABASE_URL = "https://nmrbanazmksjvtxdjfpd.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5tcmJhbmF6bWtzanZ0eGRqZnBkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA3ODcxMTAsImV4cCI6MjA5NjM2MzExMH0.BOkgOBfPeHmijL_p0l3DtlSmPVEACsqN3kHNqoU5ip8";
+const MODE_LABEL = {A:'Franchise', B:'Open Draft', C:'All-Time'};
+function lbReady(){ return !!(SUPABASE_URL && SUPABASE_ANON_KEY); }
 // card: A=[id,pos,hr,szn,avg,r,rbi,h,sb]  B=[id,hr,szn,avg,r,rbi,h,sb]  (hr=best season; rest=decade totals)
 const SCOLS = [['szn','SZN'],['avg','AVG'],['r','R'],['rbi','RBI'],['h','H']];
 function fmtAvg(v){ return (v>=1000?'1.000':'.'+String(v).padStart(3,'0')); }
@@ -287,6 +322,8 @@ function startGame(mode){
 }
 function quitToTitle(){
   document.getElementById('game').classList.add('hidden');
+  document.getElementById('results').classList.add('hidden');
+  document.getElementById('leaderboard').classList.add('hidden');
   document.getElementById('title').classList.remove('hidden');
   window.scrollTo(0,0);
 }
@@ -519,6 +556,14 @@ function showResults(){
       ${boardRows}
     </div>
     <div class="roster-mini">${rosterHtml}</div>
+    ${lbReady()?`<div class="board lb-card">
+      <div class="board-h" id="lbResultHead">Post to the Global Leaderboard</div>
+      <div id="lbForm" class="lb-form">
+        <div class="lb-prompt">${king?'You caught the King!':'You hit '+total+' HR in '+(S.mode==='A'?'Franchise':S.mode==='B'?'Open Draft':'All-Time')+'.'} Add your name to the board:</div>
+        <div class="lb-row"><input id="lbName" maxlength="20" placeholder="Your name" onkeydown="if(event.key==='Enter')lbSubmit()"><button id="lbSubmitBtn" onclick="lbSubmit()">Post my score</button></div>
+      </div>
+      <div id="lbBoard"></div>
+    </div>`:''}
     <div class="res-actions">
       <button class="btn-x" onclick="shareCard()">𝕏  Share to X</button>
       <button class="btn-out" onclick="shareCard(true)">Save Image</button>
@@ -618,7 +663,53 @@ async function shareCard(saveOnly){
   toast('Image saved — attach it to your post ✕');
 }
 
+/* ---------- GLOBAL LEADERBOARD (Supabase REST) ---------- */
+let lbSubmittedId=null;
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+async function sbInsert(row){
+  const r=await fetch(SUPABASE_URL+'/rest/v1/scores',{method:'POST',headers:{'apikey':SUPABASE_ANON_KEY,'Authorization':'Bearer '+SUPABASE_ANON_KEY,'Content-Type':'application/json','Prefer':'return=representation'},body:JSON.stringify(row)});
+  if(!r.ok) throw new Error('insert '+r.status); return (await r.json())[0];
+}
+async function sbTop(modeLabel,limit){
+  const url=SUPABASE_URL+'/rest/v1/scores?select=id,name,score&mode=eq.'+encodeURIComponent(modeLabel)+'&order=score.desc&limit='+(limit||100);
+  const r=await fetch(url,{headers:{'apikey':SUPABASE_ANON_KEY,'Authorization':'Bearer '+SUPABASE_ANON_KEY}});
+  if(!r.ok) throw new Error('select '+r.status); return await r.json();
+}
+async function renderBoardInto(elId, modeLabel, highlightId){
+  const el=document.getElementById(elId); if(!el) return;
+  el.innerHTML='<div class="lb-loading">Loading…</div>';
+  try{
+    const rows=await sbTop(modeLabel,100);
+    if(!rows.length){ el.innerHTML='<div class="lb-loading">No scores yet — be the first to post one.</div>'; return; }
+    el.innerHTML=rows.map((r,i)=>`<div class="brow ${r.id===highlightId?'you':''}"><span class="r">${i+1}</span><span class="n">${esc(r.name)}</span><span class="h">${r.score}</span></div>`).join('');
+    if(highlightId){ const y=el.querySelector('.you'); if(y) y.scrollIntoView({block:'center'}); }
+  }catch(e){ el.innerHTML='<div class="lb-loading">Couldn\u2019t load the leaderboard. Try again shortly.</div>'; }
+}
+function lbSubmit(){
+  const inp=document.getElementById('lbName'); const name=((inp&&inp.value)||'').trim().slice(0,20);
+  if(!name){ toast('Enter a name first'); return; }
+  const btn=document.getElementById('lbSubmitBtn'); btn.disabled=true; btn.textContent='Posting…';
+  sbInsert({name, score:S.total, mode:MODE_LABEL[S.mode]})
+    .then(row=>{ lbSubmittedId=row.id; const f=document.getElementById('lbForm'); if(f) f.style.display='none';
+      const h=document.getElementById('lbResultHead'); if(h) h.textContent=MODE_LABEL[S.mode]+' Leaderboard';
+      renderBoardInto('lbBoard', MODE_LABEL[S.mode], row.id); toast('Posted to the leaderboard!'); })
+    .catch(e=>{ toast('Could not post — check connection'); btn.disabled=false; btn.textContent='Post my score'; });
+}
+let lbViewMode='B';
+function showLeaderboard(modeKey){
+  lbViewMode=modeKey||lbViewMode;
+  document.getElementById('title').classList.add('hidden');
+  document.getElementById('results').classList.add('hidden');
+  document.getElementById('game').classList.add('hidden');
+  document.getElementById('leaderboard').classList.remove('hidden');
+  document.querySelectorAll('#lbTabs .lb-tab').forEach(t=>t.classList.toggle('on', t.dataset.m===lbViewMode));
+  renderBoardInto('lbViewBoard', MODE_LABEL[lbViewMode], null);
+  window.scrollTo(0,0);
+}
+
 /* ---------- misc ---------- */
+function _initLB(){ if(lbReady()){ var b=document.getElementById('titleLbBtn'); if(b) b.classList.remove('hidden'); } }
+_initLB();
 let toastT;
 function toast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove('show'),1400); }
 </script>
