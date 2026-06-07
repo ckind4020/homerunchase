@@ -187,6 +187,16 @@ button{font-family:var(--head);cursor:pointer;border:none;background:none;color:
 .lb-row button:hover{background:var(--red)} .lb-row button:disabled{opacity:.5}
 .lb-loading{padding:26px 16px;text-align:center;font-family:var(--body);color:var(--ink2);font-size:14px}
 #lbBoard,#lbViewBoard{max-height:460px;overflow-y:auto}
+.lb-diff{margin-top:8px}
+.hard-toggle{display:inline-flex;align-items:center;gap:12px;margin-top:22px;cursor:pointer;background:var(--paper);border:1.5px solid var(--line2);border-radius:30px;padding:9px 20px 9px 11px;max-width:560px;transition:.12s}
+.hard-toggle:hover{border-color:var(--red)}
+.hard-toggle.on{border-color:var(--red);background:#fbecea}
+.ht-switch{width:42px;height:24px;border-radius:14px;background:var(--line2);position:relative;flex:0 0 auto;transition:.15s}
+.hard-toggle.on .ht-switch{background:var(--red)}
+.ht-knob{position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:.15s}
+.hard-toggle.on .ht-knob{left:21px}
+.ht-label{font-family:var(--body);font-size:13.5px;color:var(--ink2);text-align:left;line-height:1.35}
+.ht-label b{color:var(--ink)}
 </style>
 </head>
 <body>
@@ -200,7 +210,7 @@ button{font-family:var(--head);cursor:pointer;border:none;background:none;color:
     <p class="tag">Build a 21-player lineup, one spin at a time. You won't see home run totals — only each batter's full stat line for the era and how many seasons they logged. Read the power, draft the boppers, and climb the all-time leaderboard to dethrone the King.</p>
     <div class="modes">
       <div class="mode-card" onclick="startGame('A')">
-        <div class="mt"><span class="badge b-red">Hard</span> Franchise</div>
+        <div class="mt"><span class="badge b-red">Team · Era</span> Franchise</div>
         <p>Spin a real <b>team &amp; era</b> — the 1955 Dodgers, the '98 Yankees. Draft from that club's actual roster, reading power off their stat line. Brutal: even flawless picks reach 762 only <b>~7%</b> of the time.</p>
         <div class="odds">5 re-rolls · your lifeline</div>
         <span class="go">Play Franchise</span>
@@ -212,11 +222,15 @@ button{font-family:var(--head);cursor:pointer;border:none;background:none;color:
         <span class="go">Play Open Draft</span>
       </div>
       <div class="mode-card" onclick="startGame('C')">
-        <div class="mt"><span class="badge b-red">Hard</span> All-Time</div>
+        <div class="mt"><span class="badge b-red">Team · Pos</span> All-Time</div>
         <p>Spin a <b>team &amp; position</b> and draft from everyone who ever played it — Yankees right field gives you Ruth, Maris, Judge. You get their best season in that uniform. One franchise, every era.</p>
         <div class="odds">5 re-rolls · build a legend</div>
         <span class="go">Play All-Time</span>
       </div>
+    </div>
+    <div class="hard-toggle" id="hardToggle" onclick="toggleHard()">
+      <span class="ht-switch"><span class="ht-knob"></span></span>
+      <span class="ht-label">⚡ Hard Mode — <b>No Re-Rolls.</b> You're stuck with every spin. Separate leaderboards.</span>
     </div>
     <p class="rules">21 picks: two at each of the 9 positions (C, 1B, 2B, 3B, SS, LF, CF, RF, DH) plus 3 wildcards — matching the 21 seasons Bonds played to set the record. Each batter shows their full totals for that era — seasons played (SZN), average, runs, RBI, hits and steals — with home runs hidden until you draft. You're scored on each player's single best HR season of the era. Eras run from 1920, the Babe Ruth live-ball era, to today.</p>
     <button id="titleLbBtn" class="title-lb hidden" onclick="showLeaderboard()">🏆 View Global Leaderboard</button>
@@ -231,7 +245,11 @@ button{font-family:var(--head);cursor:pointer;border:none;background:none;color:
       <button class="lb-tab on" data-m="B" onclick="showLeaderboard('B')">Open Draft</button>
       <button class="lb-tab" data-m="C" onclick="showLeaderboard('C')">All-Time</button>
     </div>
-    <div class="board" style="margin-top:14px"><div class="board-h">Top 100 · Most Home Runs</div><div id="lbViewBoard"></div></div>
+    <div id="lbDiff" class="lb-tabs lb-diff">
+      <button class="lb-tab on" data-h="0" onclick="showLeaderboard(null,false)">Normal</button>
+      <button class="lb-tab" data-h="1" onclick="showLeaderboard(null,true)">⚡ Hard · No Skips</button>
+    </div>
+    <div class="board" style="margin-top:14px"><div class="board-h" id="lbViewHead">Top 10</div><div id="lbViewBoard"></div></div>
   </section>
 
   <!-- GAME -->
@@ -294,6 +312,8 @@ const SITE_URL = "homerunchase.com";
 const SUPABASE_URL = "https://nmrbanazmksjvtxdjfpd.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5tcmJhbmF6bWtzanZ0eGRqZnBkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA3ODcxMTAsImV4cCI6MjA5NjM2MzExMH0.BOkgOBfPeHmijL_p0l3DtlSmPVEACsqN3kHNqoU5ip8";
 const MODE_LABEL = {A:'Franchise', B:'Open Draft', C:'All-Time'};
+function fullMode(k,hard){ return MODE_LABEL[k]+(hard?' (Hard)':''); }
+let hardSelected=false;
 function lbReady(){ return !!(SUPABASE_URL && SUPABASE_ANON_KEY); }
 // card: A=[id,pos,hr,szn,avg,r,rbi,h,sb]  B=[id,hr,szn,avg,r,rbi,h,sb]  (hr=best season; rest=decade totals)
 const SCOLS = [['szn','SZN'],['avg','AVG'],['r','R'],['rbi','RBI'],['h','H']];
@@ -302,19 +322,21 @@ let S = null;
 
 function startGame(mode){
   S = {
-    mode,
+    mode, hard: hardSelected,
     slots: POS.map(()=>[]),   // each pos -> array of picks (max 2)
     wild: [],                 // max 3
     used: new Set(),          // player names taken
     total: 0, picks: 0,
-    rolls: 5,
+    rolls: hardSelected ? 0 : 5,
     sortDesc: true, sortKey:'rbi', search:'',
     spin: null, pending: null
   };
   document.getElementById('title').classList.add('hidden');
   document.getElementById('results').classList.add('hidden');
+  document.getElementById('leaderboard').classList.add('hidden');
   document.getElementById('game').classList.remove('hidden');
-  document.getElementById('modeName').textContent = mode==='A' ? 'Franchise Mode' : mode==='B' ? 'Open Draft' : 'All-Time Mode';
+  document.getElementById('modeName').textContent = fullMode(mode,S.hard)+(S.hard?' · No Skips':'');
+  document.getElementById('rerollBtn').style.display = S.hard ? 'none' : '';
   buildLineup();
   newSpin(true);
   updateScoreboard();
@@ -546,7 +568,7 @@ function showResults(){
   r.innerHTML=`
     <div class="topbar"><div class="brand"><span class="dot">HR</span> The Home Run Chase</div></div>
     <div class="res-hero">
-      <div class="k">Final Total · ${S.mode==='A'?'Franchise':S.mode==='B'?'Open Draft':'All-Time'} Mode</div>
+      <div class="k">Final Total · ${fullMode(S.mode,S.hard)} Mode</div>
       <div class="big ${king?'king':''}">${total}</div>
       <div class="verdict ${king?'king':''}">${verdict}</div>
       <div class="res-sub">${sub}</div>
@@ -559,7 +581,7 @@ function showResults(){
     ${lbReady()?`<div class="board lb-card">
       <div class="board-h" id="lbResultHead">Post to the Global Leaderboard</div>
       <div id="lbForm" class="lb-form">
-        <div class="lb-prompt">${king?'You caught the King!':'You hit '+total+' HR in '+(S.mode==='A'?'Franchise':S.mode==='B'?'Open Draft':'All-Time')+'.'} Add your name to the board:</div>
+        <div class="lb-prompt">${king?'You caught the King!':'You hit '+total+' HR in '+fullMode(S.mode,S.hard)+'.'} Add your name to the board:</div>
         <div class="lb-row"><input id="lbName" maxlength="20" placeholder="Your name" onkeydown="if(event.key==='Enter')lbSubmit()"><button id="lbSubmitBtn" onclick="lbSubmit()">Post my score</button></div>
       </div>
       <div id="lbBoard"></div>
@@ -604,7 +626,7 @@ async function buildShareCard(){
   x.save(); x.translate(cx,P+118); x.fillText('THE HOME RUN CHASE',0,0); x.restore();
   x.fillStyle=ink2; x.font='600 18px Oswald'; x.fillText('C H A S I N G   7 6 2',cx,P+148);
   // hero number
-  x.fillStyle=ink2; x.font='600 22px Oswald'; x.fillText('FINAL TOTAL · '+(S.mode==='A'?'FRANCHISE':S.mode==='B'?'OPEN DRAFT':'ALL-TIME'),cx,P+210);
+  x.fillStyle=ink2; x.font='600 22px Oswald'; x.fillText(('FINAL TOTAL · '+fullMode(S.mode,S.hard)).toUpperCase(),cx,P+210);
   x.fillStyle=king?gold:red; x.font='400 168px Anton'; x.fillText(String(S.total),cx,P+360);
   x.font='400 30px Anton'; x.fillStyle=ink2; x.fillText('HOME RUNS',cx,P+398);
   // verdict + rank
@@ -671,44 +693,61 @@ async function sbInsert(row){
   if(!r.ok) throw new Error('insert '+r.status); return (await r.json())[0];
 }
 async function sbTop(modeLabel,limit){
-  const url=SUPABASE_URL+'/rest/v1/scores?select=id,name,score&mode=eq.'+encodeURIComponent(modeLabel)+'&order=score.desc&limit='+(limit||100);
+  const url=SUPABASE_URL+'/rest/v1/scores?select=id,name,score&mode=eq.'+encodeURIComponent(modeLabel)+'&order=score.desc&limit='+(limit||10);
   const r=await fetch(url,{headers:{'apikey':SUPABASE_ANON_KEY,'Authorization':'Bearer '+SUPABASE_ANON_KEY}});
   if(!r.ok) throw new Error('select '+r.status); return await r.json();
+}
+async function sbCount(filter){
+  const r=await fetch(SUPABASE_URL+'/rest/v1/scores?select=id'+filter,{headers:{'apikey':SUPABASE_ANON_KEY,'Authorization':'Bearer '+SUPABASE_ANON_KEY,'Prefer':'count=exact','Range':'0-0'}});
+  const cr=r.headers.get('content-range')||'/0'; return parseInt(cr.split('/')[1])||0;
+}
+async function sbRank(modeLabel, score){
+  const m='&mode=eq.'+encodeURIComponent(modeLabel);
+  const better=await sbCount(m+'&score=gt.'+score);
+  const total=await sbCount(m);
+  return {rank:better+1, total};
 }
 async function renderBoardInto(elId, modeLabel, highlightId){
   const el=document.getElementById(elId); if(!el) return;
   el.innerHTML='<div class="lb-loading">Loading…</div>';
   try{
-    const rows=await sbTop(modeLabel,100);
+    const rows=await sbTop(modeLabel,10);
     if(!rows.length){ el.innerHTML='<div class="lb-loading">No scores yet — be the first to post one.</div>'; return; }
     el.innerHTML=rows.map((r,i)=>`<div class="brow ${r.id===highlightId?'you':''}"><span class="r">${i+1}</span><span class="n">${esc(r.name)}</span><span class="h">${r.score}</span></div>`).join('');
-    if(highlightId){ const y=el.querySelector('.you'); if(y) y.scrollIntoView({block:'center'}); }
   }catch(e){ el.innerHTML='<div class="lb-loading">Couldn\u2019t load the leaderboard. Try again shortly.</div>'; }
 }
 function lbSubmit(){
   const inp=document.getElementById('lbName'); const name=((inp&&inp.value)||'').trim().slice(0,20);
   if(!name){ toast('Enter a name first'); return; }
   const btn=document.getElementById('lbSubmitBtn'); btn.disabled=true; btn.textContent='Posting…';
-  sbInsert({name, score:S.total, mode:MODE_LABEL[S.mode]})
-    .then(row=>{ lbSubmittedId=row.id; const f=document.getElementById('lbForm'); if(f) f.style.display='none';
-      const h=document.getElementById('lbResultHead'); if(h) h.textContent=MODE_LABEL[S.mode]+' Leaderboard';
-      renderBoardInto('lbBoard', MODE_LABEL[S.mode], row.id); toast('Posted to the leaderboard!'); })
+  const ml=fullMode(S.mode,S.hard);
+  sbInsert({name, score:S.total, mode:ml})
+    .then(async row=>{ lbSubmittedId=row.id; const f=document.getElementById('lbForm'); if(f) f.style.display='none';
+      let rankTxt='Posted!';
+      try{ const {rank,total}=await sbRank(ml,S.total); rankTxt='You ranked #'+rank+' of '+total; }catch(e){}
+      const h=document.getElementById('lbResultHead'); if(h) h.innerHTML=rankTxt+' <span style="font-weight:400;opacity:.65">· '+ml+' · top 10</span>';
+      renderBoardInto('lbBoard', ml, row.id); toast('Posted to the leaderboard!'); })
     .catch(e=>{ toast('Could not post — check connection'); btn.disabled=false; btn.textContent='Post my score'; });
 }
-let lbViewMode='B';
-function showLeaderboard(modeKey){
-  lbViewMode=modeKey||lbViewMode;
+let lbViewMode='B', lbViewHard=false;
+function showLeaderboard(modeKey,hard){
+  if(modeKey) lbViewMode=modeKey;
+  if(hard!==undefined && hard!==null) lbViewHard=hard;
   document.getElementById('title').classList.add('hidden');
   document.getElementById('results').classList.add('hidden');
   document.getElementById('game').classList.add('hidden');
   document.getElementById('leaderboard').classList.remove('hidden');
   document.querySelectorAll('#lbTabs .lb-tab').forEach(t=>t.classList.toggle('on', t.dataset.m===lbViewMode));
-  renderBoardInto('lbViewBoard', MODE_LABEL[lbViewMode], null);
+  document.querySelectorAll('#lbDiff .lb-tab').forEach(t=>t.classList.toggle('on', (t.dataset.h==='1')===lbViewHard));
+  const ml=fullMode(lbViewMode,lbViewHard);
+  const head=document.getElementById('lbViewHead'); if(head) head.textContent='Top 10 · '+ml;
+  renderBoardInto('lbViewBoard', ml, null);
   window.scrollTo(0,0);
 }
 
 /* ---------- misc ---------- */
 function _initLB(){ if(lbReady()){ var b=document.getElementById('titleLbBtn'); if(b) b.classList.remove('hidden'); } }
+function toggleHard(){ hardSelected=!hardSelected; document.getElementById('hardToggle').classList.toggle('on',hardSelected); }
 _initLB();
 let toastT;
 function toast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove('show'),1400); }
