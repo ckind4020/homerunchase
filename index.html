@@ -197,6 +197,9 @@ button{font-family:var(--head);cursor:pointer;border:none;background:none;color:
 .hard-toggle.on .ht-knob{left:21px}
 .ht-label{font-family:var(--body);font-size:13.5px;color:var(--ink2);text-align:left;line-height:1.35}
 .ht-label b{color:var(--ink)}
+.kofi-link{display:inline-flex;align-items:center;gap:6px;font-family:var(--head);font-size:13px;letter-spacing:1px;text-transform:uppercase;text-decoration:none;color:#fff;background:#13a9e0;padding:11px 22px;border-radius:9px;margin-top:14px;transition:.12s}
+.kofi-link:hover{background:#0e8fbd}
+#results .kofi-link{display:flex;width:max-content;margin-left:auto;margin-right:auto}
 </style>
 </head>
 <body>
@@ -234,6 +237,7 @@ button{font-family:var(--head);cursor:pointer;border:none;background:none;color:
     </div>
     <p class="rules">21 picks: two at each of the 9 positions (C, 1B, 2B, 3B, SS, LF, CF, RF, DH) plus 3 wildcards — matching the 21 seasons Bonds played to set the record. Each batter shows their full totals for that era — seasons played (SZN), average, runs, RBI, hits and steals — with home runs hidden until you draft. You're scored on each player's single best HR season of the era. Eras run from 1920, the Babe Ruth live-ball era, to today.</p>
     <button id="titleLbBtn" class="title-lb hidden" onclick="showLeaderboard()">🏆 View Global Leaderboard</button>
+    <a class="kofi-link" href="https://ko-fi.com/homerunchase" target="_blank" rel="noopener">☕ Support the game on Ko-fi</a>
   </section>
 
   <!-- LEADERBOARD -->
@@ -308,6 +312,7 @@ const LEADERS = GAMEDATA.leaders;      // [[name,hr],...] desc
 const TARGET = 762;
 // ▼▼▼  SET YOUR DOMAIN HERE once it's live (no https://) — used in the share image + tweet  ▼▼▼
 const SITE_URL = "homerunchase.com";
+const KOFI_URL = "https://ko-fi.com/homerunchase";
 // ▼▼▼  PASTE YOUR SUPABASE VALUES HERE (Project Settings → API) — the anon key is safe to ship publicly  ▼▼▼
 const SUPABASE_URL = "https://nmrbanazmksjvtxdjfpd.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5tcmJhbmF6bWtzanZ0eGRqZnBkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA3ODcxMTAsImV4cCI6MjA5NjM2MzExMH0.BOkgOBfPeHmijL_p0l3DtlSmPVEACsqN3kHNqoU5ip8";
@@ -594,6 +599,7 @@ function showResults(){
       <button class="btn-fill" onclick="startGame('${S.mode}')">Run It Back</button>
       <button class="btn-out" onclick="quitToTitle()">Change Mode</button>
     </div>
+    <a class="kofi-link" href="https://ko-fi.com/homerunchase" target="_blank" rel="noopener" style="margin-top:18px">☕ Enjoying it? Support the game on Ko-fi</a>
     <div class="foot">Stats from the Lahman Baseball Database (1920–2025). Each batter's value is their best single-season HR total within the spun era.<br>An independent fan project. Not affiliated with MLB.</div>`;
   document.getElementById('game').classList.add('hidden');
   r.classList.remove('hidden');
