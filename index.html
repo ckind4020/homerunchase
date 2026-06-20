@@ -44,13 +44,13 @@ button{font-family:var(--head);cursor:pointer;border:none;background:none;color:
 #title .sub{font-family:var(--head);text-transform:uppercase;letter-spacing:3px;font-size:14px;color:var(--ink2);margin:6px 0 4px}
 #title .tag{font-family:var(--body);max-width:540px;color:var(--ink2);font-size:16px;line-height:1.6;margin:10px 0 26px}
 .modes{display:flex;gap:16px;flex-wrap:wrap;justify-content:center;width:100%;max-width:1040px}
-.mode-card{flex:1;min-width:262px;background:var(--paper);border:1.5px solid var(--line2);border-radius:14px;padding:22px 22px 20px;text-align:left;transition:transform .12s,box-shadow .12s,border-color .12s}
+.mode-card{flex:1;min-width:262px;display:flex;flex-direction:column;background:var(--paper);border:1.5px solid var(--line2);border-radius:14px;padding:22px 22px 20px;text-align:left;transition:transform .12s,box-shadow .12s,border-color .12s}
 .mode-card:hover{transform:translateY(-4px);box-shadow:0 14px 28px rgba(22,34,61,.16);border-color:var(--red)}
 .mode-card .mt{font-family:var(--disp);font-size:24px;text-transform:uppercase;letter-spacing:.5px;display:flex;align-items:center;gap:10px}
 .mode-card .badge{font-family:var(--head);font-size:11px;font-weight:600;letter-spacing:1px;padding:3px 9px;border-radius:20px;color:#fff}
 .b-green{background:var(--green)} .b-red{background:var(--red)}
 .mode-card p{font-family:var(--body);color:var(--ink2);font-size:14.5px;line-height:1.55;margin:10px 0 16px}
-.mode-card .odds{font-family:var(--head);font-size:12px;letter-spacing:1px;color:var(--ink2);text-transform:uppercase;border-top:1px solid var(--line);padding-top:10px}
+.mode-card .odds{font-family:var(--head);font-size:12px;letter-spacing:1px;color:var(--ink2);text-transform:uppercase;border-top:1px solid var(--line);padding-top:10px;margin-top:auto}
 .mode-card .odds b{color:var(--ink)}
 .go{display:inline-block;margin-top:14px;background:var(--ink);color:var(--cream);font-size:15px;letter-spacing:1.5px;text-transform:uppercase;padding:11px 20px;border-radius:9px;width:100%;text-align:center;transition:background .12s}
 .go:hover{background:var(--red)}
@@ -211,29 +211,29 @@ button{font-family:var(--head);cursor:pointer;border:none;background:none;color:
     <h1>The Home Run<span class="hl">Chase</span></h1>
     <div class="sub">Catch Barry Bonds · 762</div>
     <p class="tag">Build a 21-player lineup, one spin at a time. You won't see home run totals — only each batter's full stat line for the era and how many seasons they logged. Read the power, draft the boppers, and climb the all-time leaderboard to dethrone the King.</p>
+    <div class="hard-toggle" id="hardToggle" onclick="toggleHard()">
+      <span class="ht-switch"><span class="ht-knob"></span></span>
+      <span class="ht-label">⚡ Hard Mode — <b>No Re-Rolls.</b> You're stuck with every spin. Separate leaderboards.</span>
+    </div>
     <div class="modes">
       <div class="mode-card" onclick="startGame('A')">
         <div class="mt"><span class="badge b-red">Team · Era</span> Franchise</div>
-        <p>Spin a real <b>team &amp; era</b> — the 1955 Dodgers, the '98 Yankees. Draft from that club's actual roster, reading power off their stat line. Brutal: even flawless picks reach 762 only <b>~7%</b> of the time.</p>
-        <div class="odds">5 re-rolls · your lifeline</div>
+        <p>Spin a real <b>team &amp; era</b> — the 1955 Dodgers, the '98 Yankees. Draft from that club's actual roster, reading power off their stat line.</p>
+        <div class="odds" id="oddsA" data-normal="5 re-rolls · your lifeline" data-hard="0 re-rolls · no lifeline">5 re-rolls · your lifeline</div>
         <span class="go">Play Franchise</span>
       </div>
       <div class="mode-card" onclick="startGame('B')">
         <div class="mt"><span class="badge b-green">Classic</span> Open Draft</div>
         <p>Spin an <b>era &amp; position</b> and draft from the whole league at that spot. The record is in reach — <i>if</i> you can spot the slugger from a row of batting averages and RBIs. A pure test of ball knowledge.</p>
-        <div class="odds">5 re-rolls · catch the King</div>
+        <div class="odds" id="oddsB" data-normal="5 re-rolls · catch the King" data-hard="0 re-rolls · pure skill">5 re-rolls · catch the King</div>
         <span class="go">Play Open Draft</span>
       </div>
       <div class="mode-card" onclick="startGame('C')">
         <div class="mt"><span class="badge b-red">Team · Pos</span> All-Time</div>
         <p>Spin a <b>team &amp; position</b> and draft from everyone who ever played it — Yankees right field gives you Ruth, Maris, Judge. You get their best season in that uniform. One franchise, every era.</p>
-        <div class="odds">5 re-rolls · build a legend</div>
+        <div class="odds" id="oddsC" data-normal="5 re-rolls · build a legend" data-hard="0 re-rolls · no mercy">5 re-rolls · build a legend</div>
         <span class="go">Play All-Time</span>
       </div>
-    </div>
-    <div class="hard-toggle" id="hardToggle" onclick="toggleHard()">
-      <span class="ht-switch"><span class="ht-knob"></span></span>
-      <span class="ht-label">⚡ Hard Mode — <b>No Re-Rolls.</b> You're stuck with every spin. Separate leaderboards.</span>
     </div>
     <p class="rules">21 picks: two at each of the 9 positions (C, 1B, 2B, 3B, SS, LF, CF, RF, DH) plus 3 wildcards — matching the 21 seasons Bonds played to set the record. Each batter shows their full totals for that era — seasons played (SZN), average, runs, RBI, hits and steals — with home runs hidden until you draft. You're scored on each player's single best HR season of the era. Eras run from 1920, the Babe Ruth live-ball era, to today.</p>
     <button id="titleLbBtn" class="title-lb hidden" onclick="showLeaderboard()">🏆 View Global Leaderboard</button>
@@ -753,7 +753,7 @@ function showLeaderboard(modeKey,hard){
 
 /* ---------- misc ---------- */
 function _initLB(){ if(lbReady()){ var b=document.getElementById('titleLbBtn'); if(b) b.classList.remove('hidden'); } }
-function toggleHard(){ hardSelected=!hardSelected; document.getElementById('hardToggle').classList.toggle('on',hardSelected); }
+function toggleHard(){ hardSelected=!hardSelected; document.getElementById('hardToggle').classList.toggle('on',hardSelected); ['oddsA','oddsB','oddsC'].forEach(function(id){ var e=document.getElementById(id); if(e) e.textContent = hardSelected ? e.dataset.hard : e.dataset.normal; }); }
 _initLB();
 let toastT;
 function toast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove('show'),1400); }
